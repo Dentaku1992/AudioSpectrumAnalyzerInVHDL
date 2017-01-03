@@ -1,0 +1,22 @@
+\chapter{Inleiding}
+
+\par Tijdens de lessenreeks systeemontwerp met HDL werd kennis gemaakt met de Xilinx Vivado ontwikkelomgeving. Onder meer volgende topics kwamen aan bod:
+	
+		\begin{description}
+			\item[Simulatie en constraints:] In dit hoofdstuk werden constraints en simulaties in de Vivado omgeving behandeld. Hiernaast kwam ook het ZedBoard ontwikkelbord aan bod.
+			\item[IP en clocking resources:] In dit hoofdstuk werd dieper ingegaan op IP's en hoe deze kunnen worden ge\"integreerd. Verder werd ook gekeken naar klokpaden binnen een ontwerp en het gebruik van de clocking wizard.
+			\item[Hardware debugging:] In deze les werd uitgelegd hoe men door middel van een ILA uit de IP catalog een signaal kan monitoren dat zich binnen de FPGA bevindt. 
+		\end{description}
+
+\par Na deze theorielessen werd in groep een groter project uitgwerkt op een FPGA-ontwikkelbord (ZedBoard). Dit project bestond eruit om een audio spectrum analyzer te maken. Deze analyzer neemt als invoer een stereo audiosignaal dat wordt binnengelezen via een audiocodec. Vervolgens dient er een spectra van deze signalen berekend te worden op de FPGA (zowel voor de linker als het rechter audiokanaal). Dit spectrum zal dan op een beeldscherm worden weergegeven door middel van een HDMI interface. 
+
+\par Het project kan worden aangevuld met volgende extra features:
+
+		\begin{itemize}
+			\item Piek aanduiding (bv. ander kleur of horizontale lijn)
+			\item Werken met verschillende kleuren (i.f.v. frequentie of amplitude)
+			\item Keuze aan gebruiker over grafiektype (bars, dots, lijn\ldots)
+			\item \ldots
+		\end{itemize}
+
+\par In dit verslag zal de werking en opbouw van het project overlopen worden. Elke component zal kort worden besproken en ook de moeilijkheden tijdens het ontwerpproces komen aan bod.

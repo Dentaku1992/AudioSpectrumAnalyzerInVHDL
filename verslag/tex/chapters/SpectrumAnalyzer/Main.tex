@@ -1,0 +1,27 @@
+\chapter{Spectrum Analyzer}
+
+\section{Audio}
+
+	\par Audio is een continu variabel en analoog signaal, dat dus niet direct digitaal te verwerken valt.
+	Het is vaak niet-periodiek en kan dus niet per periode geanalyseerd worden.
+	Om het digitaal te kunnen verwerken, wat uiteindelijk gebeurt bij de interne werking van de FPGA, dient het gesampled te worden, om daarna via een ADC aan de invoer van de digitale schakeling gelegd te worden.
+
+\section{Analyse}
+
+	\par De analyse gebeurt digitaal en via de Fourier transformatie. De Fourier transformatie baseert zich op het feit dat een signaal kan opgedeeld worden in de som van sinussen en cosinussen. Elke sinus of cosinus heeft een eigen frequentie en amplitude, waardoor er dus kan geanalyseerd worden welke frequenties er sterker aangwezig zijn in het ingangssignaal. Gezien het karakter van de audio dient hier met een DFT gewerkt te worden, een transformatie die een eindige periode nodig heeft om een analyse op uit te voeren. Door over een vaste periode te samplen, wordt een window gegenereerd die zo als input kan dienen voor deze transformatie.
+	
+	\par Gezien de digitale aard van de schakeling en de snelheid die nodig is om de verwerking uit te voeren, is het beter een aantal opeenvolgende samples te kiezen die een macht van 2 zijn. Dit houdt in dat er 2, 4, 8 \ldots samples genomen dienen te worden. Zo kan dan via een sneller algoritme, de FFT, het resultaat berekend worden.
+
+\section{Hamming Window}
+
+	\par Omdat we een FFT willen toepassen in real time moeten we het signaal in stukken hakken. Hoe groter dit stuk hoe beter de lage frequenties kunnen bepaald worden, maar hoe meer delay er komt op de uitgang van het spectrum. En door de aard van het FFT algoritme zal dit stuk als een periodiek herhalend stuk aanzien worden. Nu weten we dat een plotste verandering in amplitude veel hoge spectrale componenten zal bevatten. En omdat het sampelen op een bepaald tijdstip gebreurd kan dit er voor kan zorgen dat het eerste en het laatste sample niet gelijk uitkomen. En mogelijks zelf veel van elkaar verschillen. Daar zal dus een scherpe overgang zijn. Dit effect zal het spectrum aanzienlijk be\"invloeden. Om dit tegen te gaan maken we gebruik van een hamming window. Dit zorgt er voor dat de uiteinden heel geleidelijk naar nul gebracht worden, daardoor is het ommogelijk om daar die plotse overhang te krijgen. Het hamming window zelf heeft ruwweg de vorm van een cosinus:
+
+		\begin{equation}
+		 w(n) = \alpha - \beta \cos \left( \frac{2 \pi n}{N-1} \right)
+		\end{equation}
+
+	\par Door de samples te convolueren met de het punten van het hamming window bereiken we dat de uiteinden nagenoeg nul zijn op de uiteindes. Merk wel op dat wij de waardes voor de hamming functie gemapt hebben van 0 tot en met 255. Dit omdat het veel eenvoudiger is om integers te vermenigvuldigen dan floating point getallen te vermenigvuldigen op een FPGA.
+
+\section{Uitgang}
+
+	\par Uit de uitgang van de FFT kan dan gehaald worden hoe sterk bepaalde frequenties aanwezig zijn.	Om dit aan de gebruiker duidelijk te maken, kan dit via een grafische output weergegeven worden.

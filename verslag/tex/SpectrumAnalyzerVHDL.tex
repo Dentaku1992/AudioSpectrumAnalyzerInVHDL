@@ -1,0 +1,42 @@
+\documentclass[master=elt,masteroption=eg,dutch,oneside]{kulemt}
+\setup{title={Systeemontwerp met HDL},
+  subtitle={Audio spectrum analyzer met HDMI uitvoer},
+  author={Gert-Jan Andries\and Xavier Dejager\and Nick Steen},
+  promotor={Sammy Verslype},
+  assessor={Sammy Verslype},
+  assistant={Sammy Verslype}}
+
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{upquote}
+\usepackage{gensymb}
+\usepackage{cite}
+\usepackage{setspace}
+\usepackage{subcaption}
+
+\setlength{\parskip}{1em}
+\setlength\parindent{0pt}
+
+\titleformat{\chapter}[display]
+    {\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{-25pt}{10pt}
+
+\begin{document}
+	\tableofcontents*
+	\include{AbbreviationsAndSymbols/AbbreviationsAndSymbols}
+	\mainmatter
+	\include{Introduction/Introduction}
+	\include{Chapters/SpectrumAnalyzer/Main}
+	\include{Chapters/GlobaalSchema/Main}
+	\include{Chapters/Componenten/Main}
+	\include{Chapters/Tools/Main}
+	\include{Conclusion/Conclusion}
+	\appendixpage*
+	\appendix
+	\include{Appendix/Appendix}
+\end{document}

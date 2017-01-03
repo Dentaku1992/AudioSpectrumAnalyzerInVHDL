@@ -1,0 +1,391 @@
+\chapter{Componenten}
+
+\section{Audio interface}
+	
+	\par De audio interface-component (audio\textunderscore if) voorziet de mogelijkheid om de ADAU1761 te configureren door gebruik te maken van de I\textsuperscript{2}C-databus. Hiernaast is het ook mogelijk om audiosamples te ontvangen en te versturen van en naar de codec door middel van de I\textsuperscript{2}S-databus. Een overzicht van de hiervoor gevolgde statemachine is terug te vinden in bijlage \ref{sec:appAudioIf}.
+
+	\par Door middel van configuratieregisters die via de I\textsuperscript{2}C-databus ingesteld kunnen worden, kan een configuratie van de audiocodec gebeuren. Aan de hand van het programma SigmaStudio van Analog Devices kunnen de correcte registerinstellingen makkelijk bepaald worden. In bijlage \ref{sec:appAdauSettings} is een overzicht gegeven van deze instellingen.
+
+		\begin{table}[H]
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+			\toprule
+			\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+			\midrule
+				clk\textunderscore 100M\textunderscore in & Clock & 100 MHz klokinvoer. \\
+				clk\textunderscore 12M288 & Clock & 12.288 MHz klokinvoer. \\
+				m\textunderscore clk & Clock & gegenereerde masterklok voor ADAU1761. \\
+				lr\textunderscore clk & Clock & gegenereerde left/right klok voor ADAU1761. \\
+				b\textunderscore clk & Clock & gegenereerde bitklok voor ADAU1761. \\
+				sdata & Input & seri\"ele data invoer afkomstig van de ADAU1761 \\
+				audio\textunderscore sample\textunderscore in\textunderscore l & Input & Aanvoer van een 16-bit breed audiosample voor het linker audiokanaal. \\
+				audio\textunderscore sample\textunderscore in\textunderscore r & Input & Aanvoer van een 16-bit breed audiosample voor het rechter audiokanaal. \\
+				I\textsuperscript{2}C\textunderscore addr & Output & Uitvoer van het gegenereerde I\textsuperscript{2}C-adres voor het instellen van de configuratieregisters. \\
+				sample\textunderscore clk & Output & Uitvoer van de sampleklok. Wordt hoog telkens een nieuw sample beschikbaar is. \\
+				sample\textunderscore l & Output & Uitvoer van een 16-bit breed audiosample voor het linker audiokanaal. \\
+				sample\textunderscore r & Output & Uitvoer van een 16-bit breed audiosample voor het rechter audiokanaal. \\
+				serial\textunderscore data\textunderscore out & Output & Uitvoer van de seri\"ele data naar de ADAU1761. \\
+				sda & Output & Seri\"ele data lijn voor de I\textsuperscript{2}C-interface. \\
+				scl & Output & Seri\"ele klok lijn voor de I\textsuperscript{2}C-interface. \\
+			\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+	\subsection{ADAU1761-interface}
+
+		\par De ADAU1761-interface voorziet de mogelijkheid om audiosamples te verzenden en ontvangen. De seri\"ele data die afkomstig is van de audiocodec zal worden omgezet in een 16-bit breed signaal. Daarnaast zal ook het 16-bit brede aangevoerd audiosample omgezet worden naar een serieel signaal.
+
+			\begin{table}[H]
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+					\toprule
+					\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+					\midrule
+					lr\textunderscore clk & Clock & Left/right klokinvoer. \\
+					b\textunderscore clk & Clock & Bitklok invoer. \\
+					sdata & Input & Seri\"ele data invoer afkomstig van de ADAU1761. \\
+					audio\textunderscore sample\textunderscore in\textunderscore l & Input & Aanvoer van een 16-bit breed audiosample voor het linker audiokanaal. \\
+					audio\textunderscore sample\textunderscore in\textunderscore r & Input & Aanvoer van een 16-bit breed audiosample voor het rechter audiokanaal. \\
+					sample\textunderscore l & Output & Uitvoer van een 16-bit breed audiosample voor het linker audiokanaal. \\
+					sample\textunderscore r & Output & Uitvoer van een 16-bit breed audiosample voor het rechter audiokanaal. \\
+					sample\textunderscore clk & Output & Uitvoer van de sampleklok. Wordt hoog telkens een nieuw sample beschikbaar is. \\
+					serial\textunderscore data\textunderscore out & Output & Uitvoer van de seri\"ele data naar de ADAU1761. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+\newpage
+
+\section{Memorycontrol}
+
+	\par De memorycontrol component staat in voor het genereren van adressen. Deze adressen worden gebruikt om data op te slaan en op te vragen in een blockmemory. De schrijfadressen worden gegenereerd wanneer een nieuw sample binnengelezen wordt. Het proces dat deze adressen genereert wordt getriggerd op de sample\textunderscore clk\textunderscore in.
+
+	\par Wanneer er 1024 samples binnengelezen zijn in het geheugen	worden deze adressen aangemaakt aan een kloksnelheid van 100MHz om de samples weer uit te lezen en door te geven naar het hamming window en vervolgens de FFT.
+
+		\begin{table}[H]
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+				\toprule
+				\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+				\midrule
+				clk\textunderscore 100M & Clock & 100 MHz klokinvoer, op deze klok worden de leesadressen gegenereerd. \\
+				sample\textunderscore clk\textunderscore in & Clock & Klok die aangeeft dat een sample klaar is, op deze klok wordt een schrijfadres gegenereerd. \\
+				ready\textunderscore enable\textunderscore out & Output & Geeft aan dat de uitvoer klaar is. \\
+				last\textunderscore flag & Output & Geeft aan dat het laatste adres van een reeks adressen (0-1023) gegenereerd is. \\
+				write\textunderscore address & Output & uitvoer van het schrijfadres (10-bit). \\
+				read\textunderscore address & Output & Uitvoer van het leesadres (10-bit). \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+\section{Delay}
+\label{sec:delay}
+
+	\par De delaycomponent voorziet de mogelijkheid om na een ingesteld aantal milliseconden (max 4096) een fin-vlag hoog te maken. D.m.v. een state-machine, terug te vinden in bijlage \ref{sec:appDelay}, is het mogelijk om in een state te blijven tot de fin-vlag hoog wordt.
+
+	\par Aan de delaycomponent wordt een klok van 100 MHz aangelegd. Telkens wanneer een milliseconde verstreken is	zal een teller verhoogd worden todat het gewenste aantal bereikt is. De verstreken tijd wordt dan aangeduid door een hoge fin-vlag.
+
+		\begin{table}[H]
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+				\toprule
+				\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+				\midrule
+				CLK & Clock & De 100 MHz klokinvoer. \\
+				RST & Input & Via dit signaal is het mogelijk de delaycomponent te resetten. \\
+				DELAY\textunderscore MS & Input & Dit signaal bevat de instelling van het aantal milliseconden (12-bit breed) \\
+				DELAY\textunderscore EN & Input & Aan de hand van dit signaal wordt de delaycomponent gestart. \\
+				DELAY\textunderscore FIN & Output & Vlag die de verstreken delay-tijd aangeeft. \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+\section{OLED Top}
+
+	\par De OledTop component staat in voor het initializeren van de OLED door middel van de OledInit component. Daarnaast staat hij ook in voor het weergeven van tekst op het scherm door middel van de OledText component.
+
+	\par Deze component bevat een statemachine met 3 states: Idle, OledInitialize en OledTextState. Waneer de component gestart wordt, zal van Idle overgegaan worden naar OledInitialize. Deze state blijft zolang aangehouden todat de initialisatie volledig voltooid is en neemt ongeveer 100ms in beslag. Hierna wordt overgegaan naar de OledTextState die het mogelijk maakt om tekst naar het OLED scherm te sturen.
+
+		\begin{table}[H]
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+				\toprule
+				\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+				\midrule
+				CLK & Clock & Klokinvoer van 100 MHz. \\
+				RST & Input & Synchrone reset waarmee de state terug naar Idle gebracht wordt. De initialisatie zal hierdoor opnieuw worden uitgevoerd. \\
+				DATA\textunderscore IN & Input & 20-bit brede datainvoer die het nummer bevat van de tekstregel die moet weergegeven worden (5-bit per regel). \\
+				ENABLE & Input & Via dit signaal wordt deze component geactiveerd. \\
+				SDIN & Output & Seri\"ele data uitvoer, input van OLED. \\
+				SCLK & Output & Seri\"ele klok uitvoer, input van OLED. \\
+				DC & Output & Data/Command Control. \\
+				RES & Output & Power Reset for Controller and Driver. \\
+				VBAT & Output & Power Supply for DC/DC Converter Circuit. \\
+				VDD & Output & Power Supply for Logic. \\
+				INIT\textunderscore READY & Output & Deze vlag geeft aan dat de initialisatie voltooid is. \\
+				TEXT\textunderscore READY & Output & Deze vlag geeft aan dat de tekst op het scherm getekend werd (korte puls). \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+ 	\subsection{OLED Initialize}
+ 		
+ 		\par Om het OLED scherm te kunnen gebruiken moet het eerst ge\"initialiseerd worden. De initialisatieprocedure wordt beschreven in de datasheet van de fabrikant. Er dienen verschillende stappen doorlopen te worden waarbij de instellingen naar het OLED scherm verzonden worden. Omdat de OLED een spanning nodig heeft van 7.2V worden chargepumps gebruikt om de 3.3V spanning om te zetten naar 7.2V. Hiervoor dienen op het juiste moment enkele pinnen hoog gemaakt te worden gedurende de initialisatie.
+
+ 		\par De initialisatieprocedure wordt uitgevoerd door middel van een state-machine. Telkens wanneer een bepaalde actie volbracht is, wordt overgegaan naar de volgende state. Wanneer de initialisatie volledig voltooid is, wordt dit aangegeven door middel van een INIT\textunderscore READY\textunderscore OUT-vlag.
+ 		Een flow chart van deze statemachine is te vinden in appendix \ref{sec:appOledInit}.
+
+			\begin{table}[H]
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+					\toprule
+					\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+					\midrule
+					CLK & Clock & Klokinvoer van 100 MHz. \\
+					RST & Input & Synchrone reset waarmee de state terug naar Idle gebracht wordt. De initialisatie zal hierdoor opnieuw worden uitgevoerd. \\
+					EN & Input & Via dit signaal wordt deze component geactiveerd. \\
+					CS & Output & Chipselect, niet gebruikt op het ZedBoard. \\
+					SDO & Output & Seri\"ele data uitvoer, input van OLED. \\
+					SCLK & Output & Seri\"ele klok uitvoer, input van OLED. \\
+					DC & Output & Data/Command Control. \\
+					RES & Output & Power Reset for Controller and Driver. \\
+					VBAT & Output & Power Supply for DC/DC Converter Circuit. \\
+					VDD & Output & Power Supply for Logic. \\
+					INIT\textunderscore READY\textunderscore OUT & Output & Deze vlag geeft aan dat de initialisatie voltooid is. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+ 	\subsection{OLED Text}
+
+ 		\par De OledText component maakt het mogelijk om tekst naar het scherm te schrijven. Deze tekstdata bevindt zich in een geheugen waarin maximaal 32 lijnen tekst van elk 16 karakters opgeslagen kunnen worden. Door middel van een 20-bit brede invoer kunnen er 4 regels geselecteerd worden die naar het scherm geschreven worden. De 5 LSB's geven de eerste tekstregel en de 5 MSB' geven de laatste tekstregel.
+
+ 		\par Telkens wanneer er een verandering is van DATA\textunderscore IN, zal de tekst opnieuw naar het scherm geschreven worden. Om de tekst naar het scherm te schrijven, wordt gebruik gemaakt van een state-machine die stap voor stap de nodige acties onderneemt. Een flow chart van deze statemachine is te vinden in appendix \ref{sec:appOledText}. Kortweg worden volgende stappen doorlopen:
+
+ 			\begin{enumerate}
+ 				\item Wanneer er een verandering is van invoerdata wordt het proces gestart.
+ 				\item De tekstdata wordt lijn per lijn opgevraagd uit het geheugen.
+ 				\item Vervolgens wordt het scherm overschreven met allemaal blancolijnen.
+ 				\item De juiste lijn om naar te schrijven wordt ingesteld (0, 1, 2, 3).
+ 				\item De geselecteerde lijn wordt karakter per karakter opgevuld.
+ 						\begin{enumerate}
+ 							\item Het huidige karakter zal worden opgevraagd uit het karaktergeheugen. Dit geheugen bevat informatie over hoe een karakter naar het scherm geschreven moet worden.
+ 							\item De karakterdata zal verzonden worden door middel van de SPI component.
+ 						\end{enumerate}
+ 				\item Wanneer alle lijnen op het scherm zijn weergegeven wordt weer gewacht todat de invoer veranderd om nieuwe data weer te geven.
+ 			\end{enumerate}
+
+
+			\begin{table}[H]
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+					\toprule
+					\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+					\midrule
+					CLK & Clock & Klokinvoer van 100 MHz. \\
+					RST & Input & Synchrone reset waarmee de state terug naar Idle gebracht wordt. De initialisatie zal hierdoor opnieuw worden uitgevoerd. \\
+					EN & Input & Via dit signaal wordt deze component geactiveerd. \\
+					DATA\textunderscore IN & Input & 20-bit brede datainvoer met die het nummer bevat van de tekstregel die moet weergegeven worden (5-bit per regel). \\
+					CS & Output & Chipselect, niet gebruikt op het ZedBoard. \\
+					SDO & Output & Seri\"ele data uitvoer, input van OLED. \\
+					SCLK & Output & Seri\"ele klok uitvoer, input van OLED. \\
+					DC & Output & Data/Command Control. \\
+					FIN & Output & Deze vlag geeft aan dat de tekst op het scherm geschreven is. \\
+					READY & Output & Deze vlag geeft aan dat de tekst op het scherm geschreven is. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+ 	\subsection{Delay}
+
+ 		\par Zie hoofdstuk \ref{sec:delay} op bladzijde \pageref{sec:delay}.
+
+\newpage
+
+ 	\subsection{SPI control}
+
+ 		\par Deze component verzorgt de SPI communicatie met de OLED display. Aangezien dit de enige component is die de SPI gebruikt is er slechts een beperkte functionaliteit ge\"implementeerd.	Zo kan er enkel gestuurd worden, en wordt geen CS voorzien aangezien deze aan massa verbonden is op het ZedBoard. De communicatie verloopt volgens een statemachine waarvan de flowchart terug te vinden is in appendix \ref{sec:appSpiCtrl}.
+
+			\begin{table}[H]
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}}
+					\toprule
+					\textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\
+					\midrule
+					CLK & Clock & Klokinvoer van 100 MHz. \\
+					RST & Input & Synchrone reset van de component. \\
+					SPI\textunderscore EN & Input & Via dit signaal wordt deze component geactiveerd. \\
+					SPI\textunderscore DATA & Input & 1 byte data die via de SPI-interface verstuurd moet worden. \\
+					CS & Output & Chipselect voor SPI, niet gebruikt op het ZedBoard. \\
+					SDO & Output & Seri\"ele data uitvoer, input van OLED. \\
+					SCLK & Output & Seri\"ele klok uitvoer, input van OLED. \\
+					SPI\textunderscore FIN & Output & Deze vlag geeft aan dat de data verstuurd is. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+ 	\subsection{Gebruikte IPs}
+
+ 		\begin{description}
+ 			\item[CharLib:] (Block memory generator) Dit geheugen bevat de data over elk karakter in de ASCII tabel. Deze data wordt verzonden via SPI naar het OLED scherm.
+ 			\item[AddressMultiplier:] (Multiplier) Deze component zorgt ervoor dat adressen op een snelle manier vermenigvuldigd worden met een vaste offset van 16. Dit is nodig om het juiste startadres te berekenen van een tekstlijn in het geheugen.
+ 			\item[TextMemory:] (Block memory generator) Dit geheugen bevat 32 lijnen tekst van elk 16 karakters breed (1 karakter is 8 bits) die kunnen worden weergegeven op het OLED scherm.
+ 		\end{description}
+
+\newpage
+\section{VGA HDMI} 
+
+	\par Deze component overkoepelt alles wat het genereren en tonen van het beeld aangaat. Het bevat vooral verbindingen tussen onderlinge blokken. Het staat ook in voor een nette verbinding naar buiten toe. De klok en data uit RAM komen binnen en het adres voor de RAM en videosignalen verlaten deze component. Het zorgt ook voor de 75MHz pixel klok. Dit wordt uit een 100MHz klok gemaakt met behulp van een PLL en een deler.
+
+		\begin{table}[H] 
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+				clk\textunderscore 100 & Clock & 100 MHz klok invoer. \\
+				button\textunderscore dotmode & Input & Signaal voor de selectie van lijnmodus. \\
+				button\textunderscore edgemode & Input & Signaal voor de selectie van randkleuring. \\
+				button\textunderscore theme & Input & Signaal voor de selectie van gradi\"ent. \\
+				button\textunderscore gridmode & Input & Signaal voor de selectie van blokmodus. \\
+				button\textunderscore averaging & Input & Signaal voor de selectie van uitmiddeling. \\
+				button\textunderscore rounding & Input & Signaal voor de selectie van afronding van de blokjes. \\
+				button\textunderscore peakmode & Input & Signaal voor de selectie van piekdetectie. \\
+				data\textunderscore data & Input & Data bus naar de RAM van de FFT. \\
+				oled\textunderscore data & Input & Serieel data signaal voor het OLED scherm. \\
+				hdmi\textunderscore sda & Input & Data signaal voor I\textsuperscript{2}C-communicatie. \\
+				data\textunderscore address & Output & Adres bus naar de RAM van de FFT. \\
+				vga\textunderscore r & Output & Rood kanaal voor het VGA signaal. \\
+				vga\textunderscore g & Output & Groen kanaal voor het VGA signaal. \\
+				vga\textunderscore b & Output & Blauw kanaal voor het VGA signaal. \\
+				vga\textunderscore hs & Output & Horizontale synchronisatie puls voor het VGA signaal. \\
+				vga\textunderscore vs & Output & Verticale synchronisatie puls voor het VGA signaal. \\
+				hdmi\textunderscore clk & Output & Klok voor het HDMMI signaal. \\
+				hdmi\textunderscore hsync & Output & Horizontale synchronisatie puls voor het HDMMI signaal. \\
+				hdmi\textunderscore vsync & Output & Verticale synchronisatie puls voor het HDMMI signaal. \\
+				hdmi\textunderscore d & Output & Data kanaal voor het HDMI signaal. \\
+				hdmi\textunderscore de & Output & Data enable voor HDMI signaal. \\
+				hdmi\textunderscore scl & Output & Klok signaal voor I\textsuperscript{2}C-communicatie. \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+ 	\subsection{VGA generator}
+ 		
+ 		\par Deze component staat in voor het daadwerkelijk invullen van de kleuren voor iedere pixel in VGA formaat. Deze kleurwaardes worden real time opgehaald uit een ROM geheugen. Het houdt ook de huidige x- en y-positie van het scherm bij. Door de huidige x-positie te gebruiken als adres voor de datamapping ROM verkrijgen we het adres om de RAM met FFT resultaten uit te lezen. Deze waarde wordt dan vergeleken met de huidige y-positie. Afhankelijk daarvan zal beslist worden om de achtergrondkleur of een gradi\"entkleur te tekenen.
+
+			\begin{description}
+			   	\item[ROM Data mapping:]
+			   		ROM geheugen om de 512 frequentiebanden uit de FFT te mappen op de 1280 horizontale pixels van het scherm. Het heeft 1280 geldige adressen en de uitgang is een getal van 0 tot en met 511.
+			   	\item[ROM Jet gradi\"ent:]
+			   		ROM geheugen die de kleurinformatie bevat voor de jet gradi\"ent. Deze array heeft plaats voor 360 waardes die 24-bit breed zijn.
+			   	\item[ROM Oranje gradi\"ent:]
+			   		ROM geheugen die de kleurinformatie bevat voor de oranje gradi\"ent. Deze array heeft plaats voor 360 waardes die 24-bit breed zijn.
+		  	\end{description}
+
+			\begin{table}[H] 
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+					clk & Clock & 75 MHz klokinvoer. \\
+					button\textunderscore dotmode & Input & Signaal voor de selectie van lijnmodus. \\
+					button\textunderscore edgemode & Input & Signaal voor de selectie van randkleuring. \\
+					button\textunderscore theme & Input & Signaal voor de selectie van gradi\"ent. \\
+					button\textunderscore gridmode & Input & Signaal voor de selectie van blokmodus. \\
+					button\textunderscore averaging & Input & Signaal voor de selectie van uitmiddeling. \\
+					button\textunderscore rounding & Input & Signaal voor de selectie van afronding van de blokjes. \\
+					button\textunderscore peakmode & Input & Signaal voor de selectie van piekdetectie. \\
+					data\textunderscore data & Input & Data bus naar de RAM van de FFT. \\
+					r & Output & Rood kanaal voor het VGA signaal. \\
+					g & Output & Groen kanaal voor het VGA signaal. \\
+					b & Output & Blauw kanaal voor het VGA signaal. \\
+					de & Output & Data enable voor HDMI signaal. \\
+					hsync & Output & Horizontale synchronisatie puls voor het VGA en HDMI signaal. \\
+					vsync & Output & Verticale synchronisatie puls voor het VGA en HDMI signaal. \\
+					data\textunderscore address & Output & Adres bus naar de RAM van de FFT. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+ 	\subsection{Convert 444-422}
+
+ 		\par Deze component verzorgt de ontdubbeling van de data. Dit wil zeggen dat 1 pixel nu in 2 klokken verstuurd wordt. Dit is nodig voor de HDMI codec. Deze verwacht de pixel telkens in 2 klokcycli. Daarom woden de RGB signalen uitgemiddeld over 2 pixels en in tweevoud aan de kleurconversie aangeboden. Dit laat toe om de Cb en Cr waarde uit te reken per 2 pixels en de Y waarde per pixel. Dit is ook het formaat dat de HDMI codec verwacht.
+
+			\begin{table}[H] 
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+					clk & Clock & 75 MHz klokinvoer. \\
+					r\textunderscore in & Input & Huidig rood kanaal. \\
+					g\textunderscore in & Input & Huidig groen kanaal. \\
+					b\textunderscore in & Input & Huidig blauw kanaal. \\
+					hsync\textunderscore in & Input & Horizontale synchronisatie puls voor het HDMI signaal. \\
+					vsync\textunderscore in & Input & Verticale synchronisatie puls voor het HDMI signaal. \\
+					de\textunderscore in & Input & Data enable voor HDMI signaal. \\
+					r1\textunderscore out & Output & Rood kanaal 1. \\
+					g1\textunderscore out & Output & Groen kanaal 1. \\
+					b1\textunderscore out & Output & Blauw kanaal 1. \\
+					r2\textunderscore out & Output & Rood kanaal 2. \\
+					g2\textunderscore out & Output & Groen kanaal 2. \\
+					b2\textunderscore out & Output & Blauw kanaal 2. \\
+					pair\textunderscore start\textunderscore out & Output & Synchronisatie puls start pixelpaar. \\
+					hsync\textunderscore out & Output & Horizontale synchronisatie puls voor het HDMI signaal. \\
+					vsync\textunderscore out & Output & Verticale synchronisatie puls voor het HDMI signaal. \\
+					de\textunderscore out & Output & Data enable voor HDMI signaal. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+
+\newpage
+
+ 	\subsection{Colour space conversion}
+
+ 		\par Deze component zorgt voor een correcte conversie tussen de RGB en YCbCr kleurenruimte. Omdat het omzetten van RGB kleuren naar YCbCr kleuren vermenigvuldigingen vergt, is deze bewerking verplicht uit te voeren op DSP slices. Daardoor is deze omzetting erg snel en vrij compact in hardware.
+
+		\begin{table}[H] 
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+				clk & Clock & 75 MHz klokinvoer. \\
+				r1\textunderscore in & Input & Rood kanaal 1. \\
+				g1\textunderscore in & Input & Groen kanaal 1. \\
+				b1\textunderscore in & Input & Blauw kanaal 1. \\
+				r2\textunderscore in & Input & Rood kanaal 2. \\
+				g2\textunderscore in & Input & Groen kanaal 2. \\
+				b2\textunderscore in & Input & Blauw kanaal 2. \\
+				pair\textunderscore start\textunderscore in & Input & Synchronisatie puls start pixelpaar. \\
+				hsync\textunderscore in & Input & Horizontale synchronisatie puls voor het HDMI signaal. \\
+				vsync\textunderscore in & Input & Verticale synchronisatie puls voor het HDMI signaal. \\
+				de\textunderscore in & Input & Data enable voor HDMI signaal. \\
+				y\textunderscore out & Output & Luminicentie kanaal per pixel. \\
+				c\textunderscore out & Output & Chrominentie kanalen afwisselend per 2 pixels. \\
+				de\textunderscore out & Output & Data enable voor HDMI signaal. \\
+				hsync\textunderscore out & Output & Horizontale synchronisatie puls voor het HDMI signaal. \\
+				vsync\textunderscore out & Output & Verticale synchronisatie puls voor het HDMI signaal. \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+\newpage
+
+ 	\subsection{HDMI uitgang}
+
+ 		\par Deze component verzorgt het configureren en aansturen van de HDMI codec. Bij het opstarten wordt eerst een configuratieroutine aangeroepen. Hierna zorgt deze blok voor de verbinding van de videosignalen die van de kleurconversie komen naar de HDMI codec.
+
+		\begin{table}[H] 
+			\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+				clk & Clock & 75 MHz klokinvoer. \\
+				clk90 & Clock & 75 MHz klokinvoer 90\degree in fase verschoven. \\
+				y & Input & Luminicentiekanaal voor HDMI. \\
+				c & Input & Chrominentiekanaal voor HDMI. \\
+				hsync\textunderscore in & Input & Horizontale synchronisatie puls voor het HDMI signaal. \\
+				vsync\textunderscore in & Input & Verticale synchronisatie puls voor het HDMI signaal. \\
+				de\textunderscore in & Input & Data enable voor HDMI signaal. \\
+				oled\textunderscore data\textunderscore in & Input & Serieel data signaal voor het OLED scherm. \\
+				hdmi\textunderscore sda & Input & Data signaal voor I\textsuperscript{2}C-communicatie. \\
+				hdmi\textunderscore clk & Output & Klok voor het HDMI signaal. \\
+				hdmi\textunderscore hsync & Output & Horizontale synchronisatie puls voor het HDMI signaal. \\
+				hdmi\textunderscore vsync & Output & Verticale synchronisatie puls voor het HDMI signaal. \\
+				hdmi\textunderscore d & Output & Data kanaal voor het HDMI signaal. \\
+				hdmi\textunderscore de & Output & Data enable voor HDMI signaal. \\
+				hdmi\textunderscore scl & Output & Klok signaal voor I\textsuperscript{2}C-communicatie. \\
+				\bottomrule 
+			\end{tabular} 
+		\end{table}
+
+ 		\subsubsection{I\textsuperscript{2}C sender}
+
+ 			\par Deze component zorgt voor een correcte initialisatie van de HDMI codec. De configuratie gebeurt door middel van I\textsuperscript{2}C-communicatie. Eerst en vooral moeten we de codec aanzetten. Vervolgens beschijven we enkele resisters om de codec duidelijk te maken hoe we de data zullen aangeven. Eenmaal alles geconfigureerd is, volstaat het om er correcte videosignalen naar toe te sturen. De codec doet de rest.
+
+			\begin{table}[H] 
+				\begin{tabular}{p{0.25\textwidth} p{0.1\textwidth} p{0.55\textwidth}} \toprule \textbf{Signaal} & \textbf{Type} & \textbf{Beschrijving} \\ \midrule
+					clk & Clock & 75 MHz klokinvoer. \\
+					resend & Input & Controle signaal voor correct ontvangst. \\
+					siod & I/O & Data signaal voor I\textsuperscript{2}C-communicatie. \\
+					sioc & Output & Klok signaal voor I\textsuperscript{2}C-communicatie. \\
+					\bottomrule 
+				\end{tabular} 
+			\end{table}
+			
