@@ -28,5 +28,7 @@ The user has the possibility to make some preferences (different themes, averagi
 
 #Authors
 Gert-Jan Andries (Audio Interface, FFT, Memory, OLED interface, Toplevel)
+
 Nick Steen (VHDL tools)
+
 Xavier Dejager (Display Output, HDMI, VGA)
